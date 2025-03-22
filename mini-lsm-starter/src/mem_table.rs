@@ -97,7 +97,6 @@ impl MemTable {
     /// Get a value by key.
     pub fn get(&self, _key: &[u8]) -> Option<Bytes> {
         self.map.get(_key).map(|entry| entry.value().clone())
-        // unimplemented!()
     }
 
     /// Put a key-value pair into the mem-table.
@@ -106,10 +105,15 @@ impl MemTable {
     /// In week 2, day 6, also flush the data to WAL.
     /// In week 3, day 5, modify the function to use the batch API.
     pub fn put(&self, _key: &[u8], _value: &[u8]) -> Result<()> {
+        let size = _key.len() + _value.len() + self.approximate_size();
+        if size > 256 * 1024 * 1024 {
+            return Err(anyhow::Error::msg("memtable size exceeds 256MB"));
+        }
+        self.approximate_size
+            .fetch_add(size, std::sync::atomic::Ordering::Relaxed);
         self.map
             .insert(Bytes::copy_from_slice(_key), Bytes::copy_from_slice(_value));
         Ok(())
-        // unimplemented!()
     }
 
     /// Implement this in week 3, day 5.
