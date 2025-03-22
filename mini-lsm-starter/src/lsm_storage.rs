@@ -294,7 +294,23 @@ impl LsmStorageInner {
 
     /// Get a key from the storage. In day 7, this can be further optimized by using a bloom filter.
     pub fn get(&self, _key: &[u8]) -> Result<Option<Bytes>> {
-        unimplemented!()
+        let res = self.state.read().memtable.get(_key);
+        // if res.unwrap() == &[]  {
+        //     return Ok(None);
+        // } else {
+        //     return Ok(res);
+        // }
+        match res {
+            Some(x) => {
+                if x.is_empty() {
+                    Ok(None)
+                } else {
+                    Ok(Some(x))
+                }
+            } 
+            None => Ok(None),
+        }
+        // unimplemented!()
     }
 
     /// Write a batch of data into the storage. Implement in week 2 day 7.
@@ -304,12 +320,15 @@ impl LsmStorageInner {
 
     /// Put a key-value pair into the storage by writing into the current memtable.
     pub fn put(&self, _key: &[u8], _value: &[u8]) -> Result<()> {
-        unimplemented!()
+        let res = self.state.write().memtable.put(_key, _value);
+        // unimplemented!()
+        res
     }
 
     /// Remove a key from the storage by writing an empty value.
     pub fn delete(&self, _key: &[u8]) -> Result<()> {
-        unimplemented!()
+        self.state.write().memtable.put(_key, &[])
+        // unimplemented!()
     }
 
     pub(crate) fn path_of_sst_static(path: impl AsRef<Path>, id: usize) -> PathBuf {
